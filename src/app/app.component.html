@@ -1,0 +1,43 @@
+<p>{{data.text}}</p>
+<ul id='test1' >
+    <li *ngFor="let item of data.items" >
+        <span class="badge" data-id="{{item.id}}"></span> {{item.text}}
+      <ul>
+        <ol *ngFor="let child of item.items" (click)="myChange()">
+            <span class="badge" data-id="{{child.id}}"></span> {{child.text}}
+        </ol>
+      </ul>
+    </li>
+  </ul>
+<div>-----------------------------------------------------</div>
+<kendo-grid
+[data]="gridData"
+[height]="350"
+[pageable]="true"
+[skip]="state.skip"
+[pageSize]="state.take"
+
+(dataStateChange)="dataStateChange($event)"
+[selectable]="selectableSettings"
+[kendoGridSelectBy]="'ProductID'"
+[selectedKeys]="mySelection"
+[selectable]="true"
+
+>
+<kendo-grid-checkbox-column></kendo-grid-checkbox-column>
+<kendo-grid-column field="ProductID" title="ID" width="40">
+</kendo-grid-column>
+<kendo-grid-column field="ProductName" title="Name" width="250">
+</kendo-grid-column>
+<kendo-grid-column field="Category.CategoryName" title="Category" width="300">
+</kendo-grid-column>
+<kendo-grid-column field="UnitPrice" title="Price" width="120">
+</kendo-grid-column>
+<kendo-grid-column field="UnitsInStock" title="In stock" width="120">
+</kendo-grid-column>
+<kendo-grid-column field="Discontinued" title="Discontinued" width="120">
+<ng-template kendoGridCellTemplate let-dataItem>
+<input type="checkbox" [checked]="dataItem.Discontinued" disabled/>
+</ng-template>
+</kendo-grid-column>
+</kendo-grid>
