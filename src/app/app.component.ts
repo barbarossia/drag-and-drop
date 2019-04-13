@@ -1,5 +1,5 @@
 import { State, process } from '@progress/kendo-data-query';
-import { Component, Renderer2, NgZone, AfterViewInit, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, Renderer2, NgZone, AfterViewInit, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { RowClassArgs, SelectableSettings, RowArgs  } from '@progress/kendo-angular-grid';
 import { products } from './products';
 import { Unit, unit } from './units';
@@ -34,6 +34,7 @@ const closest = (node, predicate) => {
 
 export class AppComponent implements AfterViewInit, OnDestroy {
   private prods = products;
+  private prodsCopy = JSON.parse(JSON.stringify(this.prods));
   public data: Unit = unit;
   public mode = 'multiple';
   public selectableSettings: SelectableSettings = {
@@ -46,11 +47,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private treeindex: number;
   public state: State = {
     skip: 0,
-    take: 10
+    take: 10,
+    sort: [{ field: 'ProductID', dir: 'asc' }],
   };
   public gridData: any = process(this.prods, this.state);
+  private remove_gridRows: any[] = [];
   private currentSubscription: Subscription;
-  constructor(private renderer: Renderer2, private zone: NgZone) { }
+  constructor(private renderer: Renderer2, private zone: NgZone, private ref: ChangeDetectorRef) { }
   public ngAfterViewInit(): void {
     this.currentSubscription = this.handleDragAndDrop_grid();
     this.currentSubscription.add(this.handleDragAndDrop_Li());
@@ -150,18 +153,47 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     sub.add(dragEnd.subscribe((e: any) => {
       e.preventDefault();
       console.log('tree drag end grid');
-
+      console.log(this.dropItemParentIndex);
+      console.log(this.dropItemIndex);
+      if (this.dropItemParentIndex === -1 || this.dropItemIndex === -1) {
+        return;
+      }
       const liitem: Unit = this.data.items.find(li => li.id === this.dropItemParentIndex);
-      const dropItem = liitem.items.find(ol => ol.id === this.dropItemIndex);
-      // item.items.splice(dropItem, 1);
-
-      const d1 = {ProductName: dropItem.text, ProductID: dropItem.id};
-      this.gridData.data.push(d1);
+      const dropItem: any = liitem.items.find(ol => ol.id === this.dropItemIndex);
+      // const d1 = {ProductName: dropItem.text, ProductID: dropItem.id};
+      const d1 = this.prodsCopy.find(p => p.ProductID === this.dropItemIndex);
+      const d2 = JSON.parse(JSON.stringify(d1));
+      // const d1 = this.remove_gridRows.find(p => p.ProductID === dropItem.id);
+      // console.log(d1);
+      // console.log(this.prods);
+      this.prods.push(d2);
+      // console.log(this.prods);
+      // this.gridData.data.push(d1);
+      // this.remove_gridRows.splice(d1, 1);
+      this.gridData = process(this.prods, this.state);
+      // this.zone.run(() =>
+      //     this.gridData = process(this.prods, this.state)
+      // );
+      // this.refreshDragAndDrop();
+      // console.log(this.currentSubscription);
+      liitem.items.splice(dropItem, 1);
+      this.dropItemParentIndex = -1;
+      this.dropItemIndex = -1;
     }));
     return sub;
   }
 
+  private refreshDragAndDrop(): void {
+    console.log('refresh drag and drop');
+    this.currentSubscription.unsubscribe();
+    this.currentSubscription.add(this.handleDragAndDrop_grid());
+    this.currentSubscription.add(this.handleDragAndDrop_Li());
+    // this.currentSubscription.add(this.handleDragAndDrop_Ol());
+    console.log(this.currentSubscription);
+  }
+
   public dataStateChange(state: State): void {
+    console.log('grid change');
     this.state = state;
     this.gridData = process(products, this.state);
     this.currentSubscription.unsubscribe();
@@ -198,13 +230,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
           }
       })
     ).subscribe(({ target }) => {
-      // console.log(this.mySelection);
+      console.log('grid drag');
       const tr: HTMLTableRowElement = target as HTMLTableRowElement;
-      const index = tr.rowIndex;
-      const dataItem = this.gridData.data[index];
+      this.draggedItemIndex = tr.rowIndex;
+      // console.log(this.draggedItemIndex);
+      const dataItem = this.gridData.data[this.draggedItemIndex];
       dataItem.dragging = true;
-      this.draggedItemIndex = index;
-      }));
+    }));
 
     sub.add(dragEnd.subscribe((e: any) => {
         e.preventDefault();
@@ -218,19 +250,35 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
         this.mySelection.forEach(key => {
           // console.log(key);
-          const dataItem = this.gridData.data.find(d => d.ProductID === key);
+          // const dataItem = this.gridData.data.find(d => d.ProductID === key);
+          const dataItem2: any = this.prods.find(d => d.ProductID === key);
           // console.log(dataItem);
           const liitem = this.data.items.find(li => li.id === this.treeindex);
           if (liitem) {
             // console.log(item);
-            const d2 = new Unit({text: dataItem.ProductName, id: key});
+            const d2 = new Unit({text: dataItem2.ProductName, id: key});
+            // console.log(d2);
             liitem.items.push(d2);
             // var index = dataItem.index;
-            this.gridData.data.splice(dataItem, 1);
+            // this.gridData.data.splice(dataItem, 1);
+            // console.log(this.prods.length);
+            // console.log(dataItem2);
+            const dataItem2Index = this.prods.findIndex(d => d.ProductID === dataItem2.ProductID);
+            this.prods.splice(dataItem2Index, 1);
+            // this.remove_gridRows.push(dataItem);
+            // console.log(this.prods);
+            this.gridData = process(this.prods, this.state);
+            // console.log(this.currentSubscription);
           }
         });
         this.treeindex = 0;
         this.mySelection = [];
+        // this.draggedItemIndex = -1;
+        // this.ref.detectChanges();
+        // this.zone.run(() =>
+        //   this.gridData = process(this.prods, this.state)
+        // );
+        // this.refreshDragAndDrop();
       }));
 
     sub.add(dragOver.subscribe((e: any) => {
