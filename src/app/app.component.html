@@ -21,10 +21,10 @@
 [selectable]="selectableSettings"
 [kendoGridSelectBy]="'ProductID'"
 [selectedKeys]="mySelection"
-[selectable]="true"
+[selectable]="{enabled: true, checkboxOnly: false }"
 
 >
-<kendo-grid-checkbox-column></kendo-grid-checkbox-column>
+<!-- <kendo-grid-checkbox-column></kendo-grid-checkbox-column> -->
 <kendo-grid-column field="ProductID" title="ID" width="40">
 </kendo-grid-column>
 <kendo-grid-column field="ProductName" title="Name" width="250">
