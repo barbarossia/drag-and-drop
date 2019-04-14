@@ -51,7 +51,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     sort: [{ field: 'ProductID', dir: 'asc' }],
   };
   public gridData: any = process(this.prods, this.state);
-  private remove_gridRows: any[] = [];
+ 
   private currentSubscription: Subscription;
   constructor(private renderer: Renderer2, private zone: NgZone, private ref: ChangeDetectorRef) { }
   public ngAfterViewInit(): void {
@@ -62,6 +62,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.currentSubscription.unsubscribe();
+  }
+
+  onDomChange($event: Event): void {
+    console.log($event);
+    const sub = this.handleDragAndDrop_Ol($event.target as Element);
+
+    this.currentSubscription.add(sub);
   }
 
   private handleDragAndDrop_Li(): Subscription {
@@ -93,17 +100,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     return sub;
   }
 
-  myChange() {
-    console.log('my change');
-    this.currentSubscription.add(this.handleDragAndDrop_Ol());
-  }
-  private handleDragAndDrop_Ol(): Subscription {
+
+  private handleDragAndDrop_Ol(container: Element): Subscription {
     // console.log('handleTreeDragAndDrop3')
     const sub = new Subscription(() => {});
     // let draggedItemIndex;
-    const container = document.querySelector('#test1');
 
-    const tableRows = Array.from(container.querySelectorAll('ol'));
+    const tableRows = Array.from(container.querySelectorAll('li'));
     // console.log(tableRows)
     tableRows.forEach(row => {
       // console.log(item);
@@ -183,14 +186,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     return sub;
   }
 
-  private refreshDragAndDrop(): void {
-    console.log('refresh drag and drop');
-    this.currentSubscription.unsubscribe();
-    this.currentSubscription.add(this.handleDragAndDrop_grid());
-    this.currentSubscription.add(this.handleDragAndDrop_Li());
-    // this.currentSubscription.add(this.handleDragAndDrop_Ol());
-    console.log(this.currentSubscription);
-  }
 
   public dataStateChange(state: State): void {
     console.log('grid change');

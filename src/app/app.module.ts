@@ -5,14 +5,16 @@ import { GridModule } from '@progress/kendo-angular-grid';
 
 
 import { AppComponent } from './app.component';
+import { DomChangeDirective } from './dom-change.directive';
 
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DomChangeDirective
   ],
   imports: [
-    BrowserModule,BrowserAnimationsModule,GridModule
+    BrowserModule, BrowserAnimationsModule, GridModule
   ],
   providers: [],
   bootstrap: [AppComponent]

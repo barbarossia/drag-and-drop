@@ -2,10 +2,10 @@
 <ul id='test1' >
     <li *ngFor="let item of data.items" >
         <span class="badge" data-id="{{item.id}}"></span> {{item.text}}
-      <ul>
-        <ol *ngFor="let child of item.items" (click)="myChange()">
+      <ul (domChange)="onDomChange($event)">
+        <li *ngFor="let child of item.items">
             <span class="badge" data-id="{{child.id}}"></span> {{child.text}}
-        </ol>
+        </li>
       </ul>
     </li>
   </ul>
