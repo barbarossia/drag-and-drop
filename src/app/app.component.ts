@@ -46,17 +46,18 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private dropItemIndex: number;
   private dropItemParentIndex: number;
   private treeindex: number;
-  public isToggle: boolean = true;
+  private subMap: Map<number, Subscription> = new Map();
+
   public state: State = {
     skip: 0,
     take: 10,
     sort: [{ field: 'ProductID', dir: 'asc' }],
   };
   public gridData: any;
-  private isGridOrTree: boolean = true;
- 
+  private isGridOrTree = true;
+
   private currentSubscription: Subscription;
-  constructor(private renderer: Renderer2, private zone: NgZone, private ref: ChangeDetectorRef) { 
+  constructor(private renderer: Renderer2, private zone: NgZone, private ref: ChangeDetectorRef) {
     this.prods.forEach(p => p.Discontinued = false);
     this.gridData = process(this.prods, this.state);
   }
@@ -67,7 +68,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   }
 
-  public toggle(data: Unit): void{
+  public toggle(data: Unit): void {
+    // console.log(data);
     data.isToggle = !data.isToggle;
   }
 
@@ -82,11 +84,38 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     };
 }
 
-  onDomChange($event: Event): void {
+  onDomChange($event: MutationRecord): void {
     // console.log($event);
-    const sub = this.handleDragAndDrop_Ol($event.target as Element);
+    const ul = $event.target as Element;
+    // console.log(ul.childElementCount);
+    if (ul.childElementCount) {
+      const addedNodes = $event.addedNodes;
+      const removeNodes = $event.removedNodes;
+      console.log($event);
+      if (addedNodes.length > 0) {
+        const li = ul.parentElement;
+        // console.log(li);
+        const span = li.querySelector('span');
+        // console.log(span.id);
+        const id = parseInt(span.id, 0);
+        const sub = this.handleDragAndDrop_Ol(ul);
+        this.subMap.set(id, sub);
+        this.currentSubscription.add(sub);
+      }
+      if (removeNodes.length > 0) {
+        console.log(removeNodes);
+        const li = ul.parentElement;
+        // console.log(li);
+        const span = li.querySelector('span');
+        // console.log(span.id);
+        const id = parseInt(span.id, 0);
+        const sub = this.subMap.get(id);
+        console.log(sub);
+        sub.unsubscribe();
+        this.currentSubscription.remove(sub);
+      }
+    }
 
-    this.currentSubscription.add(sub);
   }
 
   private handleDragAndDrop_Li(): Subscription {
@@ -116,7 +145,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         if (id >= 1000) {
           this.treeindex = id;
         }
-        
+
         this.isGridOrTree = false;
     }));
     return sub;
@@ -179,12 +208,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     sub.add(dragEnd.subscribe((e: any) => {
       e.preventDefault();
       console.log('tree drag end grid');
-      console.log(this.isGridOrTree);
-      console.log(this.treeindex);
+      // console.log(this.isGridOrTree);
+      // console.log(this.treeindex);
       // const dragType = dv.getData('application/json');
       // console.log(dragType);
-      console.log(this.dropItemParentIndex);
-      console.log(this.dropItemIndex);
+      // console.log(this.dropItemParentIndex);
+      // console.log(this.dropItemIndex);
       if (this.dropItemParentIndex === -1 || this.dropItemIndex === -1) {
         return;
       }
@@ -195,16 +224,16 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       const dropItem: any = liitem.items.find(ol => ol.id === this.dropItemIndex);
 
       if (this.isGridOrTree) {
-        console.log('here');
+        console.log('move to grid');
         const d1 = this.prods.find(p => p.ProductID === this.dropItemIndex);
         d1.Discontinued = false;
       } else {
-        console.log(this.treeindex);
+        console.log('move to tree');
         const newDataItem: Unit = this.data.items.find(li => li.id === this.treeindex);
-        //console.log(newDataItem);
+        // console.log(newDataItem);
         const d2 = new Unit({text: dropItem.text, id: this.dropItemIndex});
         newDataItem.items.push(d2);
-        console.log(newDataItem);
+        // console.log(newDataItem);
       }
       const dropindex = liitem.items.findIndex(l => l.id === this.dropItemIndex);
       liitem.items.splice(dropindex, 1);
@@ -212,7 +241,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.dropItemParentIndex = -1;
       this.dropItemIndex = -1;
       this.treeindex = -1;
-      this.ref.detectChanges();
+      // this.ref.detectChanges();
     }));
     return sub;
   }

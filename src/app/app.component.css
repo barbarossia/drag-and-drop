@@ -5,9 +5,13 @@ li.arrow {
   display: block;
 }
 
-li.arrowhide {
-    list-style-type: none;
-    display: none;
+li ul.uarrow {
+  list-style-type: none;
+}
+
+li ul.uarrowhide {
+  list-style-type: none;
+  display: none;
 }
   
 
