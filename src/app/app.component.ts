@@ -24,17 +24,18 @@ const closest = (node, predicate) => {
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
   encapsulation: ViewEncapsulation.None,
   styles: [`
-      .k-grid tr.dragging {
-      background-color: #f45c42;
-      };
-  `]
+      .k-grid .k-grid-content tr.hide-row {
+        display: none;
+      }
+    `]
 })
 
 export class AppComponent implements AfterViewInit, OnDestroy {
   private prods = products;
-  private prodsCopy = JSON.parse(JSON.stringify(this.prods));
+  // private prodsCopy = JSON.parse(JSON.stringify(this.prods));
   public data: Unit = unit;
   public mode = 'multiple';
   public selectableSettings: SelectableSettings = {
@@ -45,27 +46,44 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private dropItemIndex: number;
   private dropItemParentIndex: number;
   private treeindex: number;
+  public isToggle: boolean = true;
   public state: State = {
     skip: 0,
     take: 10,
     sort: [{ field: 'ProductID', dir: 'asc' }],
   };
-  public gridData: any = process(this.prods, this.state);
+  public gridData: any;
+  private isGridOrTree: boolean = true;
  
   private currentSubscription: Subscription;
-  constructor(private renderer: Renderer2, private zone: NgZone, private ref: ChangeDetectorRef) { }
+  constructor(private renderer: Renderer2, private zone: NgZone, private ref: ChangeDetectorRef) { 
+    this.prods.forEach(p => p.Discontinued = false);
+    this.gridData = process(this.prods, this.state);
+  }
   public ngAfterViewInit(): void {
     this.currentSubscription = this.handleDragAndDrop_grid();
     this.currentSubscription.add(this.handleDragAndDrop_Li());
     // this.currentSubscription.add(this.handleTreeDragAndDrop3());
+
+  }
+
+  public toggle(): void{
+    this.isToggle = !this.isToggle;
   }
 
   public ngOnDestroy(): void {
     this.currentSubscription.unsubscribe();
   }
 
+  public rowCallback(context: RowClassArgs) {
+    // console.log(context.dataItem);
+    return {
+        'hide-row': context.dataItem.Discontinued
+    };
+}
+
   onDomChange($event: Event): void {
-    console.log($event);
+    // console.log($event);
     const sub = this.handleDragAndDrop_Ol($event.target as Element);
 
     this.currentSubscription.add(sub);
@@ -74,8 +92,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private handleDragAndDrop_Li(): Subscription {
     const sub = new Subscription(() => {});
     // let draggedItemIndex;
-    const container = document.querySelector('#test1');
-    const tableRows = Array.from(container.querySelectorAll('li'));
+    const tableRows = Array.from(document.querySelectorAll('#menu li'));
 
     tableRows.forEach(row => {
       // console.log(item);
@@ -95,8 +112,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         const liitem: HTMLLIElement = e.target as HTMLLIElement;
         const span = liitem.querySelector('span');
         // console.log(span.id);
-        this.treeindex = parseInt(span.id, 0);
-        }));
+        const id = parseInt(span.id, 0);
+        if (id >= 1000) {
+          this.treeindex = id;
+        }
+        
+        this.isGridOrTree = false;
+    }));
     return sub;
   }
 
@@ -133,14 +155,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         }
         try {
         // Firefox won't drag without setting data
-          dataTransfer.setData('application/json', '');
+          dataTransfer.setData('application/json', 'tree');
         } catch (err) {
         // IE doesn't support MIME types in setData
         }
         })
       ).subscribe(({ target }) => {
         console.log('tree drag');
-        const olitem: HTMLOListElement  = target as HTMLOListElement;
+        const olitem: HTMLLIElement  = target as HTMLLIElement;
 
         // console.log(olitem)
         const span = olitem.querySelector('span');
@@ -151,37 +173,46 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         const spanli = liitem.querySelector('span');
         // console.log(span.id);
         this.dropItemParentIndex = parseInt(spanli.id, 0);
+        this.isGridOrTree = false;
     }));
 
     sub.add(dragEnd.subscribe((e: any) => {
       e.preventDefault();
       console.log('tree drag end grid');
+      console.log(this.isGridOrTree);
+      console.log(this.treeindex);
+      // const dragType = dv.getData('application/json');
+      // console.log(dragType);
       console.log(this.dropItemParentIndex);
       console.log(this.dropItemIndex);
       if (this.dropItemParentIndex === -1 || this.dropItemIndex === -1) {
         return;
       }
+      if (this.treeindex === -1) {
+        return;
+      }
       const liitem: Unit = this.data.items.find(li => li.id === this.dropItemParentIndex);
       const dropItem: any = liitem.items.find(ol => ol.id === this.dropItemIndex);
-      // const d1 = {ProductName: dropItem.text, ProductID: dropItem.id};
-      const d1 = this.prodsCopy.find(p => p.ProductID === this.dropItemIndex);
-      const d2 = JSON.parse(JSON.stringify(d1));
-      // const d1 = this.remove_gridRows.find(p => p.ProductID === dropItem.id);
-      // console.log(d1);
-      // console.log(this.prods);
-      this.prods.push(d2);
-      // console.log(this.prods);
-      // this.gridData.data.push(d1);
-      // this.remove_gridRows.splice(d1, 1);
-      this.gridData = process(this.prods, this.state);
-      // this.zone.run(() =>
-      //     this.gridData = process(this.prods, this.state)
-      // );
-      // this.refreshDragAndDrop();
-      // console.log(this.currentSubscription);
-      liitem.items.splice(dropItem, 1);
+
+      if (this.isGridOrTree) {
+        console.log('here');
+        const d1 = this.prods.find(p => p.ProductID === this.dropItemIndex);
+        d1.Discontinued = false;
+      } else {
+        console.log(this.treeindex);
+        const newDataItem: Unit = this.data.items.find(li => li.id === this.treeindex);
+        //console.log(newDataItem);
+        const d2 = new Unit({text: dropItem.text, id: this.dropItemIndex});
+        newDataItem.items.push(d2);
+        console.log(newDataItem);
+      }
+      const dropindex = liitem.items.findIndex(l => l.id === this.dropItemIndex);
+      liitem.items.splice(dropindex, 1);
+      console.log(liitem);
       this.dropItemParentIndex = -1;
       this.dropItemIndex = -1;
+      this.treeindex = -1;
+      this.ref.detectChanges();
     }));
     return sub;
   }
@@ -195,11 +226,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.zone.onStable.pipe(take(1))
     .subscribe(() => this.currentSubscription = this.handleDragAndDrop_grid());
   }
-  public rowCallback(context: RowClassArgs) {
-    return {
-      dragging: context.dataItem.dragging
-    };
-  }
+
 
   private handleDragAndDrop_gridRow(row: Element): Subscription {
     const sub = new Subscription(() => {});
@@ -219,7 +246,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
           }
           try {
           // Firefox won't drag without setting data
-            dataTransfer.setData('application/json', '');
+            dataTransfer.setData('application/json', 'grid');
           } catch (err) {
           // IE doesn't support MIME types in setData
           }
@@ -231,56 +258,70 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       // console.log(this.draggedItemIndex);
       const dataItem = this.gridData.data[this.draggedItemIndex];
       dataItem.dragging = true;
+      this.isGridOrTree = true;
     }));
 
-    sub.add(dragEnd.subscribe((e: any) => {
-        e.preventDefault();
-        console.log('drag end grid');
-        const dragItem = this.gridData.data[this.draggedItemIndex];
-        dragItem.dragging = false;
-        if (this.mySelection.indexOf(dragItem.ProductID) < 0) {
-          this.mySelection.push(dragItem.ProductID);
-        }
-        // console.log(this.mySelection);
-
-        this.mySelection.forEach(key => {
-          // console.log(key);
-          // const dataItem = this.gridData.data.find(d => d.ProductID === key);
-          const dataItem2: any = this.prods.find(d => d.ProductID === key);
-          // console.log(dataItem);
-          const liitem = this.data.items.find(li => li.id === this.treeindex);
-          if (liitem) {
-            // console.log(item);
-            const d2 = new Unit({text: dataItem2.ProductName, id: key});
-            // console.log(d2);
-            liitem.items.push(d2);
-            // var index = dataItem.index;
-            // this.gridData.data.splice(dataItem, 1);
-            // console.log(this.prods.length);
-            // console.log(dataItem2);
-            const dataItem2Index = this.prods.findIndex(d => d.ProductID === dataItem2.ProductID);
-            this.prods.splice(dataItem2Index, 1);
-            // this.remove_gridRows.push(dataItem);
-            // console.log(this.prods);
-            this.gridData = process(this.prods, this.state);
-            // console.log(this.currentSubscription);
-          }
-        });
-        this.treeindex = 0;
-        this.mySelection = [];
-        // this.draggedItemIndex = -1;
-        // this.ref.detectChanges();
-        // this.zone.run(() =>
-        //   this.gridData = process(this.prods, this.state)
-        // );
-        // this.refreshDragAndDrop();
-      }));
+    sub.add(this.handleDrop_grid(dragEnd));
 
     sub.add(dragOver.subscribe((e: any) => {
         e.preventDefault();
         console.log('grid drag over');
+        this.isGridOrTree = true;
+        // const tr: HTMLTableRowElement = e.target as HTMLTableRowElement;
+        // this.draggedItemIndex = tr.rowIndex;
       }));
 
+    return sub;
+  }
+
+  private handleDrop_grid(event: Observable<Event>): Subscription {
+    const sub = event.subscribe((e: any) => {
+      e.preventDefault();
+      console.log('drag end grid');
+      // console.log(this.isGridOrTree);
+
+      // const dragType = dv.getDate('application/json');
+      // console.log(dragType);
+      const dragItem = this.gridData.data[this.draggedItemIndex];
+      dragItem.dragging = false;
+      if (this.mySelection.indexOf(dragItem.ProductID) < 0) {
+        this.mySelection.push(dragItem.ProductID);
+      }
+      // console.log(this.mySelection);
+
+      this.mySelection.forEach(key => {
+        // console.log(key);
+        // const dataItem = this.gridData.data.find(d => d.ProductID === key);
+        const dataItem2: any = this.prods.find(d => d.ProductID === key);
+        // console.log(dataItem);
+        const liitem = this.data.items.find(li => li.id === this.treeindex);
+        if (liitem) {
+          // console.log(item);
+          const d2 = new Unit({text: dataItem2.ProductName, id: key});
+          // console.log(d2);
+          liitem.items.push(d2);
+          // var index = dataItem.index;
+          // this.gridData.data.splice(dataItem, 1);
+          // console.log(this.prods.length);
+          // console.log(dataItem2);
+          // const dataItem2Index = this.prods.findIndex(d => d.ProductID === dataItem2.ProductID);
+          dataItem2.Discontinued = true;
+          // this.prods.splice(dataItem2Index, 1);
+          // this.remove_gridRows.push(dataItem);
+          // console.log(this.prods);
+          // this.gridData = process(this.prods, this.state);
+          // console.log(this.currentSubscription);
+        }
+      });
+      this.treeindex = -1;
+      this.mySelection = [];
+      this.draggedItemIndex = -1;
+      // this.ref.detectChanges();
+      // this.zone.run(() =>
+      //   this.gridData = process(this.prods, this.state)
+      // );
+      // this.refreshDragAndDrop();
+    });
     return sub;
   }
 

@@ -1,6 +1,8 @@
-<p>{{data.text}}</p>
-<ul id='test1' >
-    <li *ngFor="let item of data.items" >
+
+<label for="menu-toggle" class="arrow">{{data.text}}</label>
+<input type="checkbox" id="menu-toggle"/>
+<ul id='menu'>
+    <li *ngFor="let item of data.items" class="arrow">
         <span class="badge" data-id="{{item.id}}"></span> {{item.text}}
       <ul (domChange)="onDomChange($event)">
         <li *ngFor="let child of item.items">
@@ -22,7 +24,7 @@
 [kendoGridSelectBy]="'ProductID'"
 [selectedKeys]="mySelection"
 [selectable]="{enabled: true, checkboxOnly: false }"
-
+[rowClass]="rowCallback"
 >
 <!-- <kendo-grid-checkbox-column></kendo-grid-checkbox-column> -->
 <kendo-grid-column field="ProductID" title="ID" width="40">
