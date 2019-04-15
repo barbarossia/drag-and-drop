@@ -67,8 +67,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   }
 
-  public toggle(): void{
-    this.isToggle = !this.isToggle;
+  public toggle(data: Unit): void{
+    data.isToggle = !data.isToggle;
   }
 
   public ngOnDestroy(): void {

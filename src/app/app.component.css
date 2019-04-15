@@ -2,7 +2,14 @@ li.arrow {
   list-style-type: none;
   position: relative;
   padding-left: 15px;
+  display: block;
 }
+
+li.arrowhide {
+    list-style-type: none;
+    display: none;
+}
+  
 
 li.arrow:before {
   content: "\25BA \0020";
@@ -37,8 +44,13 @@ li {
     display: none; /* hide the checkbox */
   }
 #menu {
-display: none;
+display: block;
 }
 #menu-toggle:checked + #menu {
-display: block;
+display: none;
+}
+
+
+.hidden {
+    display: none;
 }
