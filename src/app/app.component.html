@@ -1,10 +1,9 @@
 
-<label for="menu-toggle" class="arrow">{{data.text}}</label>
-<input type="checkbox" id="menu-toggle"/>
-<ul id='menu'>
-    <li *ngFor="let item of data.items"  (click)="toggle(item)" class="arrow">
+<label [ngClass]="isToggle ? 'arrow-collapse' : 'arrow-expand'" (click)="ltoggle()">{{data.text}}</label>
+<ul id='menu' [ngClass]="isToggle ? 'arrow-collapse' : 'arrow-expand'">
+    <li *ngFor="let item of data.items"  (click)="toggle(item)" [ngClass]="item.isToggle ? 'arrow-collapse' : 'arrow-expand'">
         <span class="badge" data-id="{{item.id}}"></span> {{item.text}}
-      <ul (domChange)="onDomChange($event)" [ngClass]="item.isToggle ? 'uarrowhide' : 'uarrow'">
+      <ul (domChange)="onDomChange($event)" [ngClass]="item.isToggle ? 'arrow-collapse' : 'arrow-expand'">
         <li *ngFor="let child of item.items">
             <span class="badge" data-id="{{child.id}}"></span> {{child.text}}
         </li>

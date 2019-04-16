@@ -46,7 +46,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private dropItemIndex: number;
   private dropItemParentIndex: number;
   private treeindex: number;
-  private subMap: Map<number, Subscription> = new Map();
+  private isToggle = false;
 
   public state: State = {
     skip: 0,
@@ -70,8 +70,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   public toggle(data: Unit): void {
     // console.log(data);
-    data.isToggle = !data.isToggle;
+    if (data.items.length > 0) {
+      data.isToggle =  !data.isToggle;
+    }
   }
+
+  public ltoggle(): void {
+    this.isToggle =  !this.isToggle;
+  }
+
 
   public ngOnDestroy(): void {
     this.currentSubscription.unsubscribe();
@@ -98,21 +105,26 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         const span = li.querySelector('span');
         // console.log(span.id);
         const id = parseInt(span.id, 0);
+        // let sub = this.subMap.get(id);
+        // if  (!sub) {
+        //   sub = this.handleDragAndDrop_Ol(ul);
+        //   this.subMap.set(id, sub);
+        //   this.currentSubscription.add(sub);
+        // }
         const sub = this.handleDragAndDrop_Ol(ul);
-        this.subMap.set(id, sub);
         this.currentSubscription.add(sub);
       }
       if (removeNodes.length > 0) {
         console.log(removeNodes);
-        const li = ul.parentElement;
-        // console.log(li);
-        const span = li.querySelector('span');
-        // console.log(span.id);
-        const id = parseInt(span.id, 0);
-        const sub = this.subMap.get(id);
-        console.log(sub);
-        sub.unsubscribe();
-        this.currentSubscription.remove(sub);
+        // const li = ul.parentElement;
+        // // console.log(li);
+        // const span = li.querySelector('span');
+        // // console.log(span.id);
+        // const id = parseInt(span.id, 0);
+        // const sub = this.subMap.get(id);
+        // console.log(sub);
+        // sub.unsubscribe();
+        // this.currentSubscription.remove(sub);
       }
     }
 
@@ -212,8 +224,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       // console.log(this.treeindex);
       // const dragType = dv.getData('application/json');
       // console.log(dragType);
-      // console.log(this.dropItemParentIndex);
-      // console.log(this.dropItemIndex);
+      console.log(this.dropItemParentIndex);
+      console.log(this.dropItemIndex);
       if (this.dropItemParentIndex === -1 || this.dropItemIndex === -1) {
         return;
       }
@@ -237,11 +249,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
       const dropindex = liitem.items.findIndex(l => l.id === this.dropItemIndex);
       liitem.items.splice(dropindex, 1);
-      console.log(liitem);
+      // console.log(liitem);
       this.dropItemParentIndex = -1;
       this.dropItemIndex = -1;
       this.treeindex = -1;
       // this.ref.detectChanges();
+      if (liitem.items.length > 0) {
+        liitem.isToggle = false;
+      }
     }));
     return sub;
   }
@@ -340,11 +355,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
           // console.log(this.prods);
           // this.gridData = process(this.prods, this.state);
           // console.log(this.currentSubscription);
+          if (liitem.items.length > 0) {
+            liitem.isToggle = false;
+          }
         }
       });
       this.treeindex = -1;
       this.mySelection = [];
       this.draggedItemIndex = -1;
+
       // this.ref.detectChanges();
       // this.zone.run(() =>
       //   this.gridData = process(this.prods, this.state)

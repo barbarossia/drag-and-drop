@@ -1,60 +1,78 @@
-li.arrow {
+li.arrow-expand {
   list-style-type: none;
   position: relative;
   padding-left: 15px;
   display: block;
 }
 
-li ul.uarrow {
-  list-style-type: none;
-}
-
-li ul.uarrowhide {
-  list-style-type: none;
-  display: none;
-}
-  
-
-li.arrow:before {
-  content: "\25BA \0020";
-  font-size: 6px;
+li.arrow-expand:before {
+  content: "\2937";
+  font-size: 12px;
   position: absolute;
   top: 5px;
   left: -10px;
 }
 
-label:before + #menu-toggle:checked {
-    content: "\25BA \0020";
-    font-size: 6px;
-    /* position: absolute;
+li.arrow-collapse {
+  list-style-type: none;
+  position: relative;
+  padding-left: 15px;
+  display: block;
+}
+
+li.arrow-collapse:before {
+  content: "\2934";
+  font-size: 12px;
+  position: absolute;
+  top: 5px;
+  left: -10px;
+}
+
+li ul.arrow-expand {
+  list-style-type: none;
+}
+
+li ul.arrow-collapse {
+  list-style-type: none;
+  display: none;
+}
+
+label.arrow-expand {
+  padding-left: 16px;
+}
+
+label.arrow-collapse {
+  padding-left: 16px;
+}
+
+label.arrow-expand:before {
+    content: "\2937";
+    font-size: 12px;
+    position: absolute;
     top: 5px;
-    left: 0px; */
-  }
+    left: 0px;
+}
 
-label.arrow_t:before {
-    content: "\0020 \25BA";
-    font-size: 6px;
-    /* position: absolute;
+label.arrow-collapse:before {
+    content: "\2934";
+    font-size: 12px;
+    position: absolute;
     top: 5px;
-    left: 0px; */
-  }
-
-li {
-    list-style-type: none;
-
+    left: 0px; 
 }
 
-#menu-toggle {
-    display: none; /* hide the checkbox */
-  }
-#menu {
-display: block;
+ul.arrow-expand {
+  list-style-type: none;
 }
-#menu-toggle:checked + #menu {
-display: none;
+
+ul.arrow-collapse {
+  list-style-type: none;
+  display: none;
 }
 
 
-.hidden {
-    display: none;
-}
+
+
+
+
+
